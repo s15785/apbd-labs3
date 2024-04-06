@@ -5,14 +5,18 @@ namespace LegacyApp
     public class UserService
     {
         private readonly IUserCreditServiceFactory _userCreditServiceFactory;
+        private readonly IClientRepository _clientRepository;
+        
         public UserService()
         {
             _userCreditServiceFactory = new DefaultUserCreditServiceFactory();
+            _clientRepository = new ClientRepository();
         }
         
-        internal UserService(IUserCreditServiceFactory userCreditServiceFactory)
+        internal UserService(IUserCreditServiceFactory userCreditServiceFactory, IClientRepository clientRepository)
         {
             _userCreditServiceFactory = userCreditServiceFactory;
+            _clientRepository = clientRepository;
         }
         
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
@@ -37,9 +41,7 @@ namespace LegacyApp
                 return false;
             }
 
-            //todo: inject some different interface for testing
-            var clientRepository = new ClientRepository();
-            var client = clientRepository.GetById(clientId);
+            var client = _clientRepository.GetById(clientId);
 
             var user = new User
             {
