@@ -1,11 +1,11 @@
 ﻿namespace LegacyApp
 {
-    public class Client
+    public class Client(string name, int clientId, string email, string address, string type)
     {
-        public string Name { get; internal set; }
-        public int ClientId { get; internal set; }
-        public string Email { get; internal set; }
-        public string Address { get; internal set; }
-        public string Type { get; set; }
+        public string Name { get; } = name;
+        public int ClientId { get; } = clientId;
+        public string Email { get; } = email;
+        public string Address { get; } = address;
+        public string Type { get; } = type;
     }
 }

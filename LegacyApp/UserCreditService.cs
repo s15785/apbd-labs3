@@ -4,7 +4,12 @@ using System.Threading;
 
 namespace LegacyApp
 {
-    public class UserCreditService : IDisposable
+    public interface IUserCreditService : IDisposable
+    {
+        public int GetCreditLimit(string lastName, DateTime dateOfBirth);
+    }
+    
+    public class UserCreditService : IUserCreditService
     {
         /// <summary>
         /// Simulating database
@@ -40,14 +45,16 @@ namespace LegacyApp
         }
     }
     
-    internal interface IUserCreditServiceFactory
+    // because UserCreditService is disposable, and we still want to make graceful close in UserCreditService
+    // we use factory instead of holding UserCreditService directly in UserService
+    public interface IUserCreditServiceFactory
     {
-        public UserCreditService Create();
+        public IUserCreditService Create();
     }
 
     internal class DefaultUserCreditServiceFactory : IUserCreditServiceFactory 
     {
-        public UserCreditService Create()
+        public IUserCreditService Create()
         {
             return new UserCreditService();
         }

@@ -15,7 +15,7 @@ namespace LegacyApp
             _userDataAccessStrategy = new LegacyLibBasedUserDataAccessStrategy();
         }
 
-        internal UserService(
+        public UserService(
             IUserCreditServiceFactory userCreditServiceFactory,
             IClientRepository clientRepository,
             IUserDataAccessStrategy userDataAccessStrategy
