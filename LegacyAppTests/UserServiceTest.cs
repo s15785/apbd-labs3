@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace LegacyAppTests;
 
 using LegacyApp;
@@ -43,10 +45,19 @@ public class UserServiceTest
             //noop
         }
     }
+
+    private class FixedTimeProvider(DateTime fixedDateTime) : ITimeProvider
+    {
+        public DateTime NowDateTime()
+        {
+            return fixedDateTime;
+        }
+    }
         
     [Fact]
     public void SanityTest()
     {
+        var currentDateTime = DateTime.Parse("2024-04-06");
         var clientId = 1;
         var dateOfBirth = DateTime.Parse("1982-03-21");
         var creditServiceFactory = new MockedUserCreditServiceFactory(new MockedUserCreditService(3000, "Doe", dateOfBirth));
@@ -56,7 +67,7 @@ public class UserServiceTest
         var clientRepository = new MockedClientRepository(client, clientId);
         var userDataAccessStrategy = new NoopUserDataAccessStrategy();
         
-        var userService = new UserService(creditServiceFactory, clientRepository, userDataAccessStrategy);
+        var userService = new UserService(creditServiceFactory, clientRepository, userDataAccessStrategy, new FixedTimeProvider(currentDateTime));
 
         var addResult = userService.AddUser("John", "Doe", "johndoe@gmail.com", dateOfBirth, clientId);
 

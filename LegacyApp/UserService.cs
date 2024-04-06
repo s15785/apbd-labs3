@@ -2,28 +2,19 @@
 
 namespace LegacyApp
 {
-    public class UserService
+    public class UserService(
+        IUserCreditServiceFactory userCreditServiceFactory,
+        IClientRepository clientRepository,
+        IUserDataAccessStrategy userDataAccessStrategy,
+        ITimeProvider timeProvider)
     {
-        private readonly IUserCreditServiceFactory _userCreditServiceFactory;
-        private readonly IClientRepository _clientRepository;
-        private readonly IUserDataAccessStrategy _userDataAccessStrategy;
-
-        public UserService()
-        {
-            _userCreditServiceFactory = new DefaultUserCreditServiceFactory();
-            _clientRepository = new ClientRepository();
-            _userDataAccessStrategy = new LegacyLibBasedUserDataAccessStrategy();
-        }
-
-        public UserService(
-            IUserCreditServiceFactory userCreditServiceFactory,
-            IClientRepository clientRepository,
-            IUserDataAccessStrategy userDataAccessStrategy
+        public UserService() : this(
+            new DefaultUserCreditServiceFactory(),
+            new ClientRepository(),
+            new LegacyLibBasedUserDataAccessStrategy(),
+            new DefaultTimeProvider()
         )
         {
-            _userCreditServiceFactory = userCreditServiceFactory;
-            _clientRepository = clientRepository;
-            _userDataAccessStrategy = userDataAccessStrategy;
         }
 
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
@@ -39,7 +30,7 @@ namespace LegacyApp
                 return false;
             }
 
-            var now = DateTime.Now;
+            var now = timeProvider.NowDateTime();
             int age = now.Year - dateOfBirth.Year;
             if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) age--;
 
@@ -48,7 +39,7 @@ namespace LegacyApp
                 return false;
             }
 
-            var client = _clientRepository.GetById(clientId);
+            var client = clientRepository.GetById(clientId);
 
             var user = new User
             {
@@ -66,7 +57,7 @@ namespace LegacyApp
             }
             else if (client.Type == "ImportantClient")
             {
-                using (var userCreditService = _userCreditServiceFactory.Create())
+                using (var userCreditService = userCreditServiceFactory.Create())
                 {
                     int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
                     creditLimit = creditLimit * 2;
@@ -76,7 +67,7 @@ namespace LegacyApp
             else
             {
                 user.HasCreditLimit = true;
-                using (var userCreditService = _userCreditServiceFactory.Create())
+                using (var userCreditService = userCreditServiceFactory.Create())
                 {
                     int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
                     user.CreditLimit = creditLimit;
@@ -88,7 +79,7 @@ namespace LegacyApp
                 return false;
             }
 
-            _userDataAccessStrategy.AddUser(user);
+            userDataAccessStrategy.AddUser(user);
             return true;
         }
     }
