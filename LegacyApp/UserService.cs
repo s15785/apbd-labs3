@@ -4,8 +4,20 @@ namespace LegacyApp
 {
     public class UserService
     {
+        private readonly IUserCreditServiceFactory _userCreditServiceFactory;
+        public UserService()
+        {
+            _userCreditServiceFactory = new DefaultUserCreditServiceFactory();
+        }
+        
+        internal UserService(IUserCreditServiceFactory userCreditServiceFactory)
+        {
+            _userCreditServiceFactory = userCreditServiceFactory;
+        }
+        
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
+            //todo: extract validate method
             if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
             {
                 return false;
@@ -25,6 +37,7 @@ namespace LegacyApp
                 return false;
             }
 
+            //todo: inject some different interface for testing
             var clientRepository = new ClientRepository();
             var client = clientRepository.GetById(clientId);
 
@@ -37,13 +50,14 @@ namespace LegacyApp
                 LastName = lastName
             };
 
+            // todo: extract ClientLimitDeterminer
             if (client.Type == "VeryImportantClient")
             {
                 user.HasCreditLimit = false;
             }
             else if (client.Type == "ImportantClient")
             {
-                using (var userCreditService = new UserCreditService())
+                using (var userCreditService = _userCreditServiceFactory.Create())
                 {
                     int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
                     creditLimit = creditLimit * 2;
@@ -53,7 +67,7 @@ namespace LegacyApp
             else
             {
                 user.HasCreditLimit = true;
-                using (var userCreditService = new UserCreditService())
+                using (var userCreditService = _userCreditServiceFactory.Create())
                 {
                     int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
                     user.CreditLimit = creditLimit;
@@ -65,6 +79,7 @@ namespace LegacyApp
                 return false;
             }
 
+            //todo: inject some different interface for testing
             UserDataAccess.AddUser(user);
             return true;
         }
