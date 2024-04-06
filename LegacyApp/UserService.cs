@@ -6,19 +6,26 @@ namespace LegacyApp
     {
         private readonly IUserCreditServiceFactory _userCreditServiceFactory;
         private readonly IClientRepository _clientRepository;
-        
+        private readonly IUserDataAccessStrategy _userDataAccessStrategy;
+
         public UserService()
         {
             _userCreditServiceFactory = new DefaultUserCreditServiceFactory();
             _clientRepository = new ClientRepository();
+            _userDataAccessStrategy = new LegacyLibBasedUserDataAccessStrategy();
         }
-        
-        internal UserService(IUserCreditServiceFactory userCreditServiceFactory, IClientRepository clientRepository)
+
+        internal UserService(
+            IUserCreditServiceFactory userCreditServiceFactory,
+            IClientRepository clientRepository,
+            IUserDataAccessStrategy userDataAccessStrategy
+        )
         {
             _userCreditServiceFactory = userCreditServiceFactory;
             _clientRepository = clientRepository;
+            _userDataAccessStrategy = userDataAccessStrategy;
         }
-        
+
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
             //todo: extract validate method
@@ -81,8 +88,7 @@ namespace LegacyApp
                 return false;
             }
 
-            //todo: inject some different interface for testing
-            UserDataAccess.AddUser(user);
+            _userDataAccessStrategy.AddUser(user);
             return true;
         }
     }
